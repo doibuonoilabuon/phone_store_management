@@ -102,4 +102,10 @@ public class TrangChu extends JFrame {
 
         add(mainPanel,BorderLayout.CENTER);
     }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new TrangChu().setVisible(true);
+        });
+    }
 }
