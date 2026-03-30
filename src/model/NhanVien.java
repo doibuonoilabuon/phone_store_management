@@ -1,70 +1,120 @@
+
 package model;
 
+import java.util.Date;
+
+
 public class NhanVien {
-    private String maNV;
-    private String tenNV;
-    private String chucVu;
-    private String soDienThoai;
-    private String diaChi;
-    private double luong;
+
+    private int manv;
+    private String hoten;
+    private int gioitinh;
+    private String sdt;
+    private Date ngaysinh;
+    private int trangthai;
+    private String email;
 
     public NhanVien() {
     }
 
-    public NhanVien(String maNV, String tenNV, String chucVu, String soDienThoai, String diaChi, double luong) {
-        this.maNV = maNV;
-        this.tenNV = tenNV;
-        this.chucVu = chucVu;
-        this.soDienThoai = soDienThoai;
-        this.diaChi = diaChi;
-        this.luong = luong;
+    public NhanVien(int manv, String hoten, int gioitinh, Date ngaysinh, String sdt, int trangthai, String email) {
+        this.manv = manv;
+        this.hoten = hoten;
+        this.gioitinh = gioitinh;
+        this.ngaysinh = ngaysinh;
+        this.sdt = sdt;
+        this.trangthai = trangthai;
+        this.email = email;
     }
 
-    public String getMaNV() {
-        return maNV;
+    public NhanVien(String hoten, int gioitinh, Date ngaysinh, String sdt, int trangthai) {
+        this.hoten = hoten;
+        this.gioitinh = gioitinh;
+        this.ngaysinh = ngaysinh;
+        this.sdt = sdt;
+        this.trangthai = trangthai;
+     
     }
 
-    public void setMaNV(String maNV) {
-        this.maNV = maNV;
+    public int getManv() {
+        return manv;
     }
 
-    public String getTenNV() {
-        return tenNV;
+    public void setManv(int manv) {
+        this.manv = manv;
     }
 
-    public void setTenNV(String tenNV) {
-        this.tenNV = tenNV;
+    public String getHoten() {
+        return hoten;
     }
 
-    public String getChucVu() {
-        return chucVu;
+    public void setHoten(String hoten) {
+        this.hoten = hoten;
     }
 
-    public void setChucVu(String chucVu) {
-        this.chucVu = chucVu;
+    public int getGioitinh() {
+        return gioitinh;
     }
 
-    public String getSoDienThoai() {
-        return soDienThoai;
+    public void setGioitinh(int gioitinh) {
+        this.gioitinh = gioitinh;
     }
 
-    public void setSoDienThoai(String soDienThoai) {
-        this.soDienThoai = soDienThoai;
+    public Date getNgaysinh() {
+        return ngaysinh;
     }
 
-    public String getDiaChi() {
-        return diaChi;
+    public void setNgaysinh(Date ngaysinh) {
+        this.ngaysinh = ngaysinh;
     }
 
-    public void setDiaChi(String diaChi) {
-        this.diaChi = diaChi;
+    public String getSdt() {
+        return sdt;
     }
 
-    public double getLuong() {
-        return luong;
+    public void setSdt(String sdt) {
+        this.sdt = sdt;
     }
 
-    public void setLuong(double luong) {
-        this.luong = luong;
+    public int getTrangthai() {
+        return trangthai;
     }
+
+    public void setTrangthai(int trangthai) {
+        this.trangthai = trangthai;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+ 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+       
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "NhanVien{" + "manv=" + manv + ", hoten=" + hoten + ", gioitinh=" + gioitinh + ", ngaysinh=" + ngaysinh + '}';
+    }
+
+    public int getColumnCount() {
+        return getClass().getDeclaredFields().length;
+    }
+
 }

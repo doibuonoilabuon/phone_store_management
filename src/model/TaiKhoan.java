@@ -1,60 +1,100 @@
+
 package model;
 
+import java.util.Objects;
+
+
 public class TaiKhoan {
-    private String maTK;
-    private String tenDangNhap;
-    private String matKhau;
-    private String vaiTro;
-    private String maNV;
+    private int manv;
+    private String username;
+    private String matkhau;
+    private int manhomquyen;
+    private int trangthai;
 
     public TaiKhoan() {
+        
+    }
+    
+    public TaiKhoan(int manv, String username, String matkhau, int manhomquyen, int trangthai) {
+        this.manv = manv;
+        this.username = username;
+        this.matkhau = matkhau;
+        this.manhomquyen = manhomquyen;
+        this.trangthai = trangthai;
     }
 
-    public TaiKhoan(String maTK, String tenDangNhap, String matKhau, String vaiTro, String maNV) {
-        this.maTK = maTK;
-        this.tenDangNhap = tenDangNhap;
-        this.matKhau = matKhau;
-        this.vaiTro = vaiTro;
-        this.maNV = maNV;
+    public int getManv() {
+        return manv;
     }
 
-    public String getMaTK() {
-        return maTK;
+    public void setManv(int manv) {
+        this.manv = manv;
     }
 
-    public void setMaTK(String maTK) {
-        this.maTK = maTK;
+    public String getUsername() {
+        return username;
     }
 
-    public String getTenDangNhap() {
-        return tenDangNhap;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
-    public void setTenDangNhap(String tenDangNhap) {
-        this.tenDangNhap = tenDangNhap;
+    public String getMatkhau() {
+        return matkhau;
     }
 
-    public String getMatKhau() {
-        return matKhau;
+    public void setMatkhau(String matkhau) {
+        this.matkhau = matkhau;
     }
 
-    public void setMatKhau(String matKhau) {
-        this.matKhau = matKhau;
+    public int getManhomquyen() {
+        return manhomquyen;
     }
 
-    public String getVaiTro() {
-        return vaiTro;
+    public void setManhomquyen(int manhomquyen) {
+        this.manhomquyen = manhomquyen;
     }
 
-    public void setVaiTro(String vaiTro) {
-        this.vaiTro = vaiTro;
+    public int getTrangthai() {
+        return trangthai;
     }
 
-    public String getMaNV() {
-        return maNV;
+    public void setTrangthai(int trangthai) {
+        this.trangthai = trangthai;
     }
 
-    public void setMaNV(String maNV) {
-        this.maNV = maNV;
+
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final TaiKhoan other = (TaiKhoan) obj;
+        if (this.manv != other.manv) {
+            return false;
+        }
+        if (this.manhomquyen != other.manhomquyen) {
+            return false;
+        }
+        if (this.trangthai != other.trangthai) {
+            return false;
+        }
+        if (!Objects.equals(this.username, other.username)) {
+            return false;
+        }
+        return Objects.equals(this.matkhau, other.matkhau);
     }
+
+    @Override
+    public String toString() {
+        return "AccountDTO{" + "manv=" + manv + ", username=" + username + ", matkhau=" + matkhau + ", manhomquyen=" + manhomquyen + ", trangthai=" + trangthai + '}';
+    }
+    
 }

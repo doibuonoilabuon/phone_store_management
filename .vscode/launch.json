@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "view.Main",
+            "projectName": "phone_store_management_9928ff22"
+        },
+        {
+            "type": "java",
+            "name": "Run Main",
+            "request": "launch",
+            "mainClass": "view.Main",
+            "projectName": "phone_store_management",
+            "cwd": "${workspaceFolder}",
+            "classPaths": [
+                "${workspaceFolder}/bin",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/lib/*"
+            ]
+        }
+    ]
+}
