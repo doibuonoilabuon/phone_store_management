@@ -53,7 +53,7 @@ public class NhomQuyen {
 
     @Override
     public String toString() {
-        return "NhomQuyenDTO{" + "manhomquyen=" + manhomquyen + ", tennhomquyen=" + tennhomquyen + '}';
+        return "NhomQuyen{" + "manhomquyen=" + manhomquyen + ", tennhomquyen=" + tennhomquyen + '}';
     }
     
 }

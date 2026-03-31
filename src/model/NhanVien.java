@@ -1,7 +1,7 @@
 
 package model;
 
-import java.util.Date;
+
 
 
 public class NhanVien {
@@ -10,27 +10,27 @@ public class NhanVien {
     private String hoten;
     private int gioitinh;
     private String sdt;
-    private Date ngaysinh;
+    private String chucvu;
     private int trangthai;
     private String email;
 
     public NhanVien() {
     }
 
-    public NhanVien(int manv, String hoten, int gioitinh, Date ngaysinh, String sdt, int trangthai, String email) {
+    public NhanVien(int manv, String hoten, int gioitinh, String chucvu, String sdt, int trangthai, String email) {
         this.manv = manv;
         this.hoten = hoten;
         this.gioitinh = gioitinh;
-        this.ngaysinh = ngaysinh;
+        this.chucvu = chucvu;
         this.sdt = sdt;
         this.trangthai = trangthai;
         this.email = email;
     }
 
-    public NhanVien(String hoten, int gioitinh, Date ngaysinh, String sdt, int trangthai) {
+    public NhanVien(String hoten, int gioitinh, String chucvu, String sdt, int trangthai) {
         this.hoten = hoten;
         this.gioitinh = gioitinh;
-        this.ngaysinh = ngaysinh;
+        this.chucvu = chucvu;
         this.sdt = sdt;
         this.trangthai = trangthai;
      
@@ -57,15 +57,15 @@ public class NhanVien {
     }
 
     public void setGioitinh(int gioitinh) {
-        this.gioitinh = gioitinh;
+        this.gioitinh = gioitinh ;
     }
 
-    public Date getNgaysinh() {
-        return ngaysinh;
+    public String getChucvu() {
+        return chucvu;
     }
 
-    public void setNgaysinh(Date ngaysinh) {
-        this.ngaysinh = ngaysinh;
+    public void setNgaysinh(String chucvu) {
+        this.chucvu = chucvu;
     }
 
     public String getSdt() {
@@ -110,7 +110,7 @@ public class NhanVien {
 
     @Override
     public String toString() {
-        return "NhanVien{" + "manv=" + manv + ", hoten=" + hoten + ", gioitinh=" + gioitinh + ", ngaysinh=" + ngaysinh + '}';
+        return "NhanVien{" + "manv=" + manv + ", hoten=" + hoten + ", gioitinh=" + gioitinh + ", chucvu=" + chucvu + '}';
     }
 
     public int getColumnCount() {

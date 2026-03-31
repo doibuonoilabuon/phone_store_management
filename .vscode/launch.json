@@ -3,10 +3,18 @@
     "configurations": [
         {
             "type": "java",
+            "name": "DbConection",
+            "request": "launch",
+            "mainClass": "database.DbConection",
+            "projectName": "phone_store_management_9928ff22"
+        },
+        {
+            "type": "java",
             "name": "Main",
             "request": "launch",
             "mainClass": "view.Main",
-            "projectName": "phone_store_management_9928ff22"
+            "projectName": "phone_store_management_9928ff22",
+            "cwd": "${workspaceFolder}"
         },
         {
             "type": "java",

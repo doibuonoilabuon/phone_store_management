@@ -42,14 +42,7 @@ public class ChiTietQuyen {
         this.hanhdong = hanhdong;
     }
 
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 83 * hash + Objects.hashCode(this.manhomquyen);
-        hash = 83 * hash + Objects.hashCode(this.machucnang);
-        hash = 83 * hash + Objects.hashCode(this.hanhdong);
-        return hash;
-    }
+
 
     @Override
     public boolean equals(Object obj) {
