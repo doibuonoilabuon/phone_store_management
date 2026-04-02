@@ -3,6 +3,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "DangNhap",
+            "request": "launch",
+            "mainClass": "view.DangNhap",
+            "projectName": "phone_store_management_9928ff22"
+        },
+        {
+            "type": "java",
+            "name": "test",
+            "request": "launch",
+            "mainClass": "test",
+            "projectName": "phone_store_management_9928ff22"
+        },
+        {
+            "type": "java",
             "name": "DbConection",
             "request": "launch",
             "mainClass": "database.DbConection",

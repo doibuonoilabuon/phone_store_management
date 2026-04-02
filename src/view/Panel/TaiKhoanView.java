@@ -1,12 +1,20 @@
 package view.Panel;
 
+import controller.TaiKhoanController;
+import model.TaiKhoan;
+import view.Dialog.TaiKhoanDialog;
+import view.Form.ButtonToolBar;
+import view.Form.IntegratedSearch;
+import view.Dialog.DoiMatKhauDialog;
 import view.Main;
-import view.ButtonToolBar;
-import view.IntegratedSearch;
+
 import com.formdev.flatlaf.FlatClientProperties;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -19,15 +27,21 @@ public class TaiKhoanView extends JPanel implements ActionListener {
     JTable table;
     IntegratedSearch search;
     ButtonToolBar btnGrant, btnChangePass, btnLock;
+    
+    private TaiKhoanController tkController;
+    private javax.swing.Timer searchTimer;
 
     Color BG = new Color(240, 247, 250);
 
     public TaiKhoanView(Main main) {
         this.main = main;
+        tkController = new TaiKhoanController();
         setLayout(new BorderLayout(0, 0));
         setBackground(BG);
         initPadding();
         initContent();
+        
+        loadDataTable(tkController.getAllList());
     }
 
     private void initContent() {
@@ -59,6 +73,27 @@ public class TaiKhoanView extends JPanel implements ActionListener {
         functionBar.add(toolbar);
 
         search = new IntegratedSearch(new String[]{"Tất cả", "Tên đăng nhập", "Nhóm quyền"});
+        
+        search.txtSearchForm.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent evt) {
+                if (searchTimer != null && searchTimer.isRunning()) searchTimer.stop(); 
+                searchTimer = new javax.swing.Timer(300, e -> {
+                    String text = search.txtSearchForm.getText().trim();
+                    String type = search.cbxChoose.getSelectedItem().toString();
+                    loadDataTable(tkController.search(text, type));
+                });
+                searchTimer.setRepeats(false);
+                searchTimer.start();
+            }
+        });
+        
+        search.cbxChoose.addActionListener(e -> {
+            loadDataTable(tkController.search(search.txtSearchForm.getText().trim(), search.cbxChoose.getSelectedItem().toString()));
+        });
+
+        search.btnReset.addActionListener(e -> loadDataTable(tkController.getAllList()));
+
         functionBar.add(search);
         contentCenter.add(functionBar, BorderLayout.NORTH);
 
@@ -66,7 +101,8 @@ public class TaiKhoanView extends JPanel implements ActionListener {
         pnlTable.setBackground(Color.WHITE);
         pnlTable.putClientProperty(FlatClientProperties.STYLE, "arc: 12");
 
-        String[] cols = {"Tên Đăng Nhập", "Tên Nhân Viên", "Nhóm Quyền", "Trạng Thái"};
+        // Đổi Tên Nhân Viên thành Mã NV cho khớp Model
+        String[] cols = {"Tên Đăng Nhập", "Mã NV", "Nhóm Quyền", "Trạng Thái"};
         tblModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -96,17 +132,63 @@ public class TaiKhoanView extends JPanel implements ActionListener {
         }
     }
 
+    public void loadDataTable(ArrayList<TaiKhoan> result) {
+        tblModel.setRowCount(0);
+        for (TaiKhoan tk : result) {
+            tblModel.addRow(new Object[]{
+                tk.getUsername(), 
+                tk.getManv(), 
+                tk.getManhomquyen() == 1 ? "Quản lý" : "Nhân viên", 
+                tk.getTrangthai() == 1 ? "Hoạt động" : "Bị khóa"
+            });
+        }
+    }
+
+    public TaiKhoan getTaiKhoanSelected() {
+        int index = table.getSelectedRow();
+        if (index == -1) return null;
+        
+        String username = table.getValueAt(index, 0).toString();
+        for (TaiKhoan tk : tkController.getAllList()) {
+            if (tk.getUsername().equals(username)) return tk;
+        }
+        return null;
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == btnGrant) {
-            JOptionPane.showMessageDialog(this, "Chức năng Cấp Tài Khoản đang được xây dựng!");
+            TaiKhoanDialog dialog = new TaiKhoanDialog(this, null, "Cấp Tài Khoản", true);
+            dialog.setVisible(true);
+
         } else if (e.getSource() == btnChangePass) {
-            if (table.getSelectedRow() == -1) { JOptionPane.showMessageDialog(this, "Vui lòng chọn tài khoản!"); return; }
-            JOptionPane.showMessageDialog(this, "Chức năng Đổi Mật Khẩu đang được xây dựng!");
+            TaiKhoan tkSelect = getTaiKhoanSelected();
+            if (tkSelect != null) {
+                DoiMatKhauDialog dialog = new DoiMatKhauDialog(this, null, "Đổi Mật Khẩu", true, tkSelect);
+                dialog.setVisible(true);
+            } else {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn tài khoản cần đổi mật khẩu!");
+            }
+
         } else if (e.getSource() == btnLock) {
-            if (table.getSelectedRow() == -1) { JOptionPane.showMessageDialog(this, "Vui lòng chọn tài khoản!"); return; }
-            int cf = JOptionPane.showConfirmDialog(this, "Xác nhận khóa tài khoản?", "Khóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (cf == JOptionPane.YES_OPTION) JOptionPane.showMessageDialog(this, "Đã khóa!");
+            TaiKhoan tkSelect = getTaiKhoanSelected();
+            if (tkSelect != null) {
+                if(tkSelect.getTrangthai() == 0) {
+                    JOptionPane.showMessageDialog(this, "Tài khoản này đã bị khóa từ trước!");
+                    return;
+                }
+                int cf = JOptionPane.showConfirmDialog(this, "Xác nhận khóa tài khoản: " + tkSelect.getUsername() + "?", "Khóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (cf == JOptionPane.YES_OPTION) {
+                    if(tkController.lockTaiKhoan(tkSelect.getUsername())) {
+                        JOptionPane.showMessageDialog(this, "Đã khóa thành công!");
+                        loadDataTable(tkController.getAllList());
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Khóa thất bại!");
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn tài khoản cần khóa!");
+            }
         }
     }
 }

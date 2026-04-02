@@ -1,12 +1,19 @@
 package view.Panel;
 
+import controller.NhanVienController;
+import model.NhanVien;
+import view.Dialog.NhanVienDialog;
+import view.Form.ButtonToolBar;
+import view.Form.IntegratedSearch;
 import view.Main;
-import view.ButtonToolBar;
-import view.IntegratedSearch;
+
 import com.formdev.flatlaf.FlatClientProperties;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -19,15 +26,21 @@ public class NhanVienView extends JPanel implements ActionListener {
     JTable table;
     IntegratedSearch search;
     ButtonToolBar btnAdd, btnEdit, btnDelete;
+    
+    private NhanVienController nvController;
+    private javax.swing.Timer searchTimer;
 
     Color BG = new Color(240, 247, 250);
 
     public NhanVienView(Main main) {
         this.main = main;
+        nvController = new NhanVienController();
         setLayout(new BorderLayout(0, 0));
         setBackground(BG);
         initPadding();
         initContent();
+        
+        loadDataTable(nvController.getAllList());
     }
 
     private void initContent() {
@@ -59,6 +72,27 @@ public class NhanVienView extends JPanel implements ActionListener {
         functionBar.add(toolbar);
 
         search = new IntegratedSearch(new String[]{"Tất cả", "Tên NV", "Số điện thoại"});
+        
+        search.txtSearchForm.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent evt) {
+                if (searchTimer != null && searchTimer.isRunning()) searchTimer.stop(); 
+                searchTimer = new javax.swing.Timer(300, e -> {
+                    String text = search.txtSearchForm.getText().trim();
+                    String type = search.cbxChoose.getSelectedItem().toString();
+                    loadDataTable(nvController.search(text, type));
+                });
+                searchTimer.setRepeats(false);
+                searchTimer.start();
+            }
+        });
+        
+        search.cbxChoose.addActionListener(e -> {
+            loadDataTable(nvController.search(search.txtSearchForm.getText().trim(), search.cbxChoose.getSelectedItem().toString()));
+        });
+
+        search.btnReset.addActionListener(e -> loadDataTable(nvController.getAllList()));
+
         functionBar.add(search);
         contentCenter.add(functionBar, BorderLayout.NORTH);
 
@@ -79,7 +113,7 @@ public class NhanVienView extends JPanel implements ActionListener {
         DefaultTableCellRenderer center = new DefaultTableCellRenderer();
         center.setHorizontalAlignment(JLabel.CENTER);
         for (int i = 0; i < table.getColumnCount(); i++) {
-            if (i != 1) table.getColumnModel().getColumn(i).setCellRenderer(center);
+            table.getColumnModel().getColumn(i).setCellRenderer(center);
         }
 
         JScrollPane scroll = new JScrollPane(table);
@@ -96,17 +130,61 @@ public class NhanVienView extends JPanel implements ActionListener {
         }
     }
 
+    public void loadDataTable(ArrayList<NhanVien> result) {
+        tblModel.setRowCount(0);
+        for (NhanVien nv : result) {
+            tblModel.addRow(new Object[]{
+                nv.getManv(), 
+                nv.getHoten(), 
+                nv.getGioitinh() == 1 ? "Nam" : "Nữ", 
+                nv.getSdt(), 
+                nv.getEmail(), 
+                nv.getChucvu()
+            });
+        }
+    }
+
+    public NhanVien getNhanVienSelected() {
+        int index = table.getSelectedRow();
+        if (index == -1) return null;
+        
+        int maNV = Integer.parseInt(table.getValueAt(index, 0).toString());
+        for (NhanVien nv : nvController.getAllList()) {
+            if (nv.getManv() == maNV) return nv;
+        }
+        return null;
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == btnAdd) {
-            JOptionPane.showMessageDialog(this, "Chức năng Thêm Nhân Viên đang được xây dựng!");
+            NhanVienDialog dialog = new NhanVienDialog(this, null, "Thêm Nhân Viên", true, "ADD", null);
+            dialog.setVisible(true);
+
         } else if (e.getSource() == btnEdit) {
-            if (table.getSelectedRow() == -1) { JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên!"); return; }
-            JOptionPane.showMessageDialog(this, "Chức năng Sửa đang được xây dựng!");
+            NhanVien nvSelect = getNhanVienSelected();
+            if (nvSelect != null) {
+                NhanVienDialog dialog = new NhanVienDialog(this, null, "Sửa Nhân Viên", true, "EDIT", nvSelect);
+                dialog.setVisible(true);
+            } else {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên cần sửa!");
+            }
+
         } else if (e.getSource() == btnDelete) {
-            if (table.getSelectedRow() == -1) { JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên!"); return; }
-            int cf = JOptionPane.showConfirmDialog(this, "Xác nhận xóa nhân viên?", "Xóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (cf == JOptionPane.YES_OPTION) JOptionPane.showMessageDialog(this, "Đã xóa!");
+            NhanVien nvSelect = getNhanVienSelected();
+            if (nvSelect != null) {
+                int cf = JOptionPane.showConfirmDialog(this, "Xác nhận cho nghỉ việc: " + nvSelect.getHoten() + "?", "Xóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (cf == JOptionPane.YES_OPTION) {
+                    if(nvController.deleteNhanVien(nvSelect.getManv())) {
+                        JOptionPane.showMessageDialog(this, "Đã cập nhật trạng thái nghỉ việc!");
+                        loadDataTable(nvController.getAllList());
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Xóa thất bại!");
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên cần xóa!");
+            }
         }
     }
 }

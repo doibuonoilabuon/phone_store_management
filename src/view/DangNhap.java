@@ -1,6 +1,9 @@
 package view;
 
-
+import DAO.TaiKhoanDAO;
+import model.TaiKhoan;
+import view.Form.InputForm;
+import view.help.QuenMatKhau;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatIntelliJLaf;
@@ -100,12 +103,14 @@ public class DangNhap extends JFrame implements KeyListener {
         });
         pnlLogIn.add(lbl6);
 
+        // Chức năng quên mật khẩu (Tạm thời giữ nguyên form QuenMatKhau của bạn)
         lbl7 = new JLabel("Quên mật khẩu", JLabel.RIGHT);
         lbl7.setPreferredSize(new Dimension(380, 50));
         lbl7.setFont(new Font(FlatRobotoFont.FAMILY, Font.ITALIC, 18));
         lbl7.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent evt) {
+                // Đảm bảo bạn đã có class QuenMatKhau, nếu không code sẽ báo lỗi đoạn này
                 QuenMatKhau qmk = new QuenMatKhau(jf, true);
                 qmk.setVisible(true);
             }
@@ -115,18 +120,40 @@ public class DangNhap extends JFrame implements KeyListener {
         pnlMain.add(pnlLogIn);
 
         this.add(pnlMain, BorderLayout.EAST);
-
     }
 
+    // ========== ĐÃ CẬP NHẬT LOGIC ĐĂNG NHẬP TẠI ĐÂY ==========
     public void checkLogin() throws UnsupportedLookAndFeelException {
         String usernameCheck = txtUsername.getText();
         String passwordCheck = txtPassword.getPass();
-        if (usernameCheck.equals("") || passwordCheck.equals("")) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập thông tin đầy đủ", "Cảnh báo!", JOptionPane.WARNING_MESSAGE);
+        
+        // 1. Kiểm tra rỗng
+        if (usernameCheck.isEmpty() || passwordCheck.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập thông tin đầy đủ!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            return;
         } 
-                }
-
-    
+        
+        // 2. Chọc xuống DB lấy thông tin tài khoản
+        TaiKhoan tk = TaiKhoanDAO.getInstance().selectById(usernameCheck);
+        
+        // 3. Xử lý các trường hợp
+        if (tk == null) {
+            JOptionPane.showMessageDialog(this, "Tên đăng nhập không tồn tại!", "Lỗi Đăng Nhập", JOptionPane.ERROR_MESSAGE);
+        } else if (!tk.getMatkhau().equals(passwordCheck)) {
+            JOptionPane.showMessageDialog(this, "Sai mật khẩu! Vui lòng thử lại.", "Lỗi Đăng Nhập", JOptionPane.ERROR_MESSAGE);
+        } else if (tk.getTrangthai() == 0) {
+            JOptionPane.showMessageDialog(this, "Tài khoản của bạn đã bị khóa! Vui lòng liên hệ Admin.", "Khóa Tài Khoản", JOptionPane.ERROR_MESSAGE);
+        } else {
+           
+            
+            // Mở giao diện chính (Main)
+            Main mainApp = new Main(); // <-- Đảm bảo class Main của bạn có constructor này
+            mainApp.setVisible(true);
+            
+            // Tắt form đăng nhập hiện tại
+            this.dispose(); 
+        }
+    }
 
     private void pnlLogInMousePressed(java.awt.event.MouseEvent evt) throws UnsupportedLookAndFeelException {
         checkLogin();
@@ -138,7 +165,6 @@ public class DangNhap extends JFrame implements KeyListener {
     }
 
     private void pnlLogInMouseExited(java.awt.event.MouseEvent evt) {
-
         pnlLogIn.setBackground(Color.BLACK);
         pnlLogIn.setForeground(Color.white);
     }
@@ -151,6 +177,7 @@ public class DangNhap extends JFrame implements KeyListener {
         FlatIntelliJLaf.registerCustomDefaultsSource("style");
         FlatIntelliJLaf.setup();
         UIManager.put("PasswordField.showRevealButton", true);
+        
         DangNhap login = new DangNhap();
         login.setVisible(true);
     }
@@ -163,15 +190,12 @@ public class DangNhap extends JFrame implements KeyListener {
         this.add(bo, BorderLayout.WEST);
 
         lblImage = new JLabel();
-//        lblImage.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/phone2.jpg")));
         lblImage.setIcon(new FlatSVGIcon("./img/login-image.svg"));
         bo.add(lblImage);
     }
 
     @Override
-    public void keyTyped(KeyEvent e) {
-//        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
+    public void keyTyped(KeyEvent e) {}
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -185,7 +209,5 @@ public class DangNhap extends JFrame implements KeyListener {
     }
 
     @Override
-    public void keyReleased(KeyEvent e) {
-//        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
+    public void keyReleased(KeyEvent e) {}
 }

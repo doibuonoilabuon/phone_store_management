@@ -3,7 +3,7 @@ package view.Panel;
 import java.awt.*;
 import javax.swing.*;
 
-import view.PanelShadow;
+import view.Form.PanelShadow;
 
 public class TrangChu extends JPanel {
 
