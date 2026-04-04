@@ -1,12 +1,16 @@
 package view.help;
 
+
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.*;
+
+import DAO.NhanVienDAO;
+import DAO.TaiKhoanDAO;
 
 public class QuenMatKhau extends JDialog implements ActionListener {
 
@@ -17,7 +21,7 @@ public class QuenMatKhau extends JDialog implements ActionListener {
     private JPasswordField txtPassword;
 
     private String generatedOTP; // lưu OTP
-
+    private String emailNhan; 
     public QuenMatKhau(Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
@@ -103,7 +107,9 @@ public class QuenMatKhau extends JDialog implements ActionListener {
 
         CardLayout c = (CardLayout) jpMain.getLayout();
 
-        // ===== STEP 1: EMAIL =====
+        // =====================================
+        // STEP 1: EMAIL
+        // =====================================
         if (e.getSource() == btnSendMail) {
 
             String email = txtEmail.getText().trim();
@@ -121,30 +127,54 @@ public class QuenMatKhau extends JDialog implements ActionListener {
                 JOptionPane.showMessageDialog(this, "Email không hợp lệ");
                 return;
             }
+            if (!NhanVienDAO.getInstance().checkEmail(email)) {
+                JOptionPane.showMessageDialog(this, "Email này không tồn tại trên hệ thống nhân viên!");
+                return; // Dừng lại luôn, không gửi mail nữa
+            }
+            // Lưu email lại để dùng
+            this.emailNhan = email;
 
-            // ===== TẠO OTP =====
-            generatedOTP = String.valueOf(100000 + new Random().nextInt(900000));
+           
+            btnSendMail.setText("Đang gửi...");
+            btnSendMail.setEnabled(false);
 
-            JOptionPane.showMessageDialog(this,
-                    "OTP (demo): " + generatedOTP);
+            // Dùng SwingWorker để gửi mail ngầm, không làm đơ giật giao diện
+            SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                @Override
+                protected Void doInBackground() throws Exception {
+                    // Gọi sang class helper của sếp để tạo mã và gửi mail
+                    generatedOTP = SendEmailSMTP.getOTP();
+                    SendEmailSMTP.sendOTP(emailNhan, generatedOTP);
+                    return null;
+                }
 
-            c.show(jpMain, "step2");
+                @Override
+                protected void done() {
+                    // Chạy xong thì trả lại nút bấm như cũ và chuyển màn hình
+                    btnSendMail.setText("Gửi mã");
+                    btnSendMail.setEnabled(true);
+                    
+                    JOptionPane.showMessageDialog(QuenMatKhau.this, "Đã gửi mã OTP đến email của bạn! Vui lòng kiểm tra hộp thư.");
+                    c.show(jpMain, "step2");
+                }
+            };
+            worker.execute(); // Bắt đầu tiến trình ngầm
         }
 
-        // ===== STEP 2: OTP =====
+       
         else if (e.getSource() == btnConfirmOTP) {
 
             String otp = txtOTP.getText().trim();
 
             if (otp.equals(generatedOTP)) {
-                JOptionPane.showMessageDialog(this, "OTP đúng");
+                JOptionPane.showMessageDialog(this, "Xác nhận OTP thành công!");
                 c.show(jpMain, "step3");
             } else {
-                JOptionPane.showMessageDialog(this, "OTP sai");
+                JOptionPane.showMessageDialog(this, "Mã OTP không chính xác, vui lòng thử lại!");
             }
         }
 
-        // ===== STEP 3: PASSWORD =====
+      
         else if (e.getSource() == btnChangePass) {
 
             String pass = new String(txtPassword.getPassword());
@@ -154,9 +184,10 @@ public class QuenMatKhau extends JDialog implements ActionListener {
                 return;
             }
 
-            // 👉 Sau này bạn lưu DB ở đây
-            JOptionPane.showMessageDialog(this, "Đổi mật khẩu thành công");
-
+           
+             TaiKhoanDAO.getInstance().updatePasswordByEmail(emailNhan, pass);
+            
+            JOptionPane.showMessageDialog(this, "Đổi mật khẩu thành công!");
             this.dispose();
         }
     }

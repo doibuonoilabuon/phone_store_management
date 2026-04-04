@@ -48,8 +48,12 @@ public class NhanVienDialog extends JDialog {
         cbxGioiTinh = new JComboBox<>(new String[]{"Nữ", "Nam"}); // 0: Nữ, 1: Nam
         pnlCenter.add(cbxGioiTinh);
 
-        pnlCenter.add(new JLabel("Chức Vụ:"));
-        cbxChucVu = new JComboBox<>(new String[]{"Nhân viên", "Quản lý"});
+     pnlCenter.add(new JLabel("Chức Vụ:"));
+        cbxChucVu = new JComboBox<>(new String[]{
+            "Quản lý kho", 
+            "Nhân viên nhập hàng", 
+            "Nhân viên xuất hàng"
+        });
         pnlCenter.add(cbxChucVu);
 
         pnlCenter.add(new JLabel("Số Điện Thoại:"));

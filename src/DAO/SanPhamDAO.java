@@ -19,7 +19,8 @@ public class SanPhamDAO implements DAOinterface<SanPham> {
         int result = 0;
         try {
             Connection con = DbConection.getConnection();
-            String sql = "INSERT INTO SanPham (maSP, tenSP, thuongHieu, donGia, soLuongTon, mauSac, dungLuong, ram) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            // Thêm hinhAnh vào lệnh INSERT
+            String sql = "INSERT INTO SanPham (maSP, tenSP, thuongHieu, donGia, soLuongTon, mauSac, dungLuong, ram, hinhAnh) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement pst = con.prepareStatement(sql);
 
             pst.setString(1, t.getMaSP());
@@ -30,6 +31,7 @@ public class SanPhamDAO implements DAOinterface<SanPham> {
             pst.setString(6, t.getMauSac());
             pst.setString(7, t.getDungLuong());
             pst.setString(8, t.getRam());
+            pst.setString(9, t.getHinhAnh()); // Set giá trị hình ảnh
 
             result = pst.executeUpdate();
             DbConection.closeConnection(con);
@@ -44,7 +46,8 @@ public class SanPhamDAO implements DAOinterface<SanPham> {
         int result = 0;
         try {
             Connection con = DbConection.getConnection();
-            String sql = "UPDATE SanPham SET tenSP=?, thuongHieu=?, donGia=?, soLuongTon=?, mauSac=?, dungLuong=?, ram=? WHERE maSP=?";
+            // Thêm hinhAnh vào lệnh UPDATE
+            String sql = "UPDATE SanPham SET tenSP=?, thuongHieu=?, donGia=?, soLuongTon=?, mauSac=?, dungLuong=?, ram=?, hinhAnh=? WHERE maSP=?";
             PreparedStatement pst = con.prepareStatement(sql);
 
             pst.setString(1, t.getTenSP());
@@ -54,7 +57,8 @@ public class SanPhamDAO implements DAOinterface<SanPham> {
             pst.setString(5, t.getMauSac());
             pst.setString(6, t.getDungLuong());
             pst.setString(7, t.getRam());
-            pst.setString(8, t.getMaSP());
+            pst.setString(8, t.getHinhAnh()); // Vị trí số 8 là hình ảnh
+            pst.setString(9, t.getMaSP());    // Vị trí số 9 là mã SP
 
             result = pst.executeUpdate();
             DbConection.closeConnection(con);
@@ -92,6 +96,7 @@ public class SanPhamDAO implements DAOinterface<SanPham> {
             ResultSet rs = pst.executeQuery();
 
             while (rs.next()) {
+                // Nhớ thêm rs.getString("hinhAnh") vào cuối nhé
                 SanPham sp = new SanPham(
                         rs.getString("maSP"),
                         rs.getString("tenSP"),
@@ -100,7 +105,8 @@ public class SanPhamDAO implements DAOinterface<SanPham> {
                         rs.getInt("soLuongTon"),
                         rs.getString("mauSac"),
                         rs.getString("dungLuong"),
-                        rs.getString("ram")
+                        rs.getString("ram"),
+                        rs.getString("hinhAnh") 
                 );
                 list.add(sp);
             }
@@ -130,7 +136,8 @@ public class SanPhamDAO implements DAOinterface<SanPham> {
                         rs.getInt("soLuongTon"),
                         rs.getString("mauSac"),
                         rs.getString("dungLuong"),
-                        rs.getString("ram")
+                        rs.getString("ram"),
+                        rs.getString("hinhAnh")
                 );
             }
             DbConection.closeConnection(con);

@@ -12,12 +12,18 @@ public class DbConection {
             // Đăng ký SQL Server Driver
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
 
-            // Thông tin kết nối của bạn
-            String url = "jdbc:sqlserver://WHISPERSTONE\\SQLEXPRESS01:1433;" + "databaseName=QuanLyDienThoai;" + "user=sa;" + "password=123456789;" + "encrypt=true;" + "trustServerCertificate=true;";
+            // ĐÃ CẬP NHẬT: Thêm sendStringParametersAsUnicode và characterEncoding
+            String url = "jdbc:sqlserver://WHISPERSTONE\\SQLEXPRESS01:1433;" 
+                       + "databaseName=QuanLyDienThoai;" 
+                       + "user=sa;" 
+                       + "password=123456789;" 
+                       + "encrypt=true;" 
+                       + "trustServerCertificate=true;"
+                       + "sendStringParametersAsUnicode=true;" 
+                       + "characterEncoding=UTF-8;";           
             // Tạo kết nối
             result = DriverManager.getConnection(url);
-
-            System.out.println("✅ Kết nối SQL Server thành công!");
+         
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null,
@@ -33,7 +39,7 @@ public class DbConection {
         try {
             if (c != null && !c.isClosed()) {
                 c.close();
-                System.out.println("🔌 Đã đóng kết nối");
+              
             }
         } catch (Exception e) {
             e.printStackTrace();

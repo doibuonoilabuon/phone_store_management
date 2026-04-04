@@ -32,7 +32,33 @@ public class TaiKhoanDAO implements DAOinterface<TaiKhoan> {
         }
         return result;
     }
+public int updatePasswordByEmail(String email, String newPassword) {
+        int result = 0;
+        try {
+            Connection con = DbConection.getConnection();
+            // Lệnh SQL chuẩn theo ảnh cấu trúc bảng TaiKhoan của sếp
+            String sql = "UPDATE TaiKhoan SET matkhau = ? " +
+                         "WHERE manv = (SELECT manv FROM NhanVien WHERE email = ?)";
+            
+            PreparedStatement pst = con.prepareStatement(sql);
+            pst.setString(1, newPassword);
+            pst.setString(2, email);
 
+            result = pst.executeUpdate();
+            
+            
+            if (result > 0) {
+                System.out.println("==> Đã đổi mật khẩu thành công trong DB cho Email: " + email);
+            } else {
+                System.out.println("==> KHÔNG tìm thấy nhân viên nào có Email: " + email);
+            }
+
+            DbConection.closeConnection(con);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
     @Override
     public int update(TaiKhoan t) {
         // Chỉ dùng để update mật khẩu hoặc nhóm quyền, username là khóa chính không đổi

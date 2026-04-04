@@ -5,7 +5,6 @@ import model.TaiKhoan;
 import view.Dialog.TaiKhoanDialog;
 import view.Form.ButtonToolBar;
 import view.Form.IntegratedSearch;
-import view.Dialog.DoiMatKhauDialog;
 import view.Main;
 
 import com.formdev.flatlaf.FlatClientProperties;
@@ -26,7 +25,7 @@ public class TaiKhoanView extends JPanel implements ActionListener {
     DefaultTableModel tblModel;
     JTable table;
     IntegratedSearch search;
-    ButtonToolBar btnGrant, btnChangePass, btnLock;
+    ButtonToolBar btnGrant, btnEdit, btnLock; // Đổi tên nút để rõ nghĩa hơn
     
     private TaiKhoanController tkController;
     private javax.swing.Timer searchTimer;
@@ -49,6 +48,7 @@ public class TaiKhoanView extends JPanel implements ActionListener {
         contentCenter.setBackground(BG);
         add(contentCenter, BorderLayout.CENTER);
 
+        // ========== THANH CÔNG CỤ (TOOLBAR) ==========
         JPanel functionBar = new JPanel(new GridLayout(1, 2, 30, 0));
         functionBar.setBackground(Color.WHITE);
         functionBar.setPreferredSize(new Dimension(0, 95));
@@ -61,17 +61,18 @@ public class TaiKhoanView extends JPanel implements ActionListener {
         toolbar.setBorderPainted(false);
         toolbar.setRollover(true);
 
-        btnGrant      = new ButtonToolBar("CẤP TÀI KHOẢN", "add.svg",    "create");
-        btnChangePass = new ButtonToolBar("ĐỔI MẬT KHẨU",  "edit.svg",   "update");
-        btnLock       = new ButtonToolBar("KHÓA TK",        "cancel.svg", "delete");
+        btnGrant = new ButtonToolBar("CẤP TÀI KHOẢN", "add.svg", "create");
+        btnEdit  = new ButtonToolBar("SỬA TÀI KHOẢN", "edit.svg", "update"); // Đổi từ Đổi mật khẩu thành Sửa
+        btnLock  = new ButtonToolBar("KHÓA TK", "cancel.svg", "delete");
 
-        for (ButtonToolBar btn : new ButtonToolBar[]{btnGrant, btnChangePass, btnLock}) {
+        for (ButtonToolBar btn : new ButtonToolBar[]{btnGrant, btnEdit, btnLock}) {
             btn.addActionListener(this);
             toolbar.add(btn);
         }
 
         functionBar.add(toolbar);
 
+        // ========== THANH TÌM KIẾM ==========
         search = new IntegratedSearch(new String[]{"Tất cả", "Tên đăng nhập", "Nhóm quyền"});
         
         search.txtSearchForm.addKeyListener(new KeyAdapter() {
@@ -92,16 +93,19 @@ public class TaiKhoanView extends JPanel implements ActionListener {
             loadDataTable(tkController.search(search.txtSearchForm.getText().trim(), search.cbxChoose.getSelectedItem().toString()));
         });
 
-        search.btnReset.addActionListener(e -> loadDataTable(tkController.getAllList()));
+        search.btnReset.addActionListener(e -> {
+            search.txtSearchForm.setText("");
+            loadDataTable(tkController.getAllList());
+        });
 
         functionBar.add(search);
         contentCenter.add(functionBar, BorderLayout.NORTH);
 
+        // ========== BẢNG HIỂN THỊ DỮ LIỆU ==========
         JPanel pnlTable = new JPanel(new BorderLayout());
         pnlTable.setBackground(Color.WHITE);
         pnlTable.putClientProperty(FlatClientProperties.STYLE, "arc: 12");
 
-        // Đổi Tên Nhân Viên thành Mã NV cho khớp Model
         String[] cols = {"Tên Đăng Nhập", "Mã NV", "Nhóm Quyền", "Trạng Thái"};
         tblModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
@@ -124,31 +128,31 @@ public class TaiKhoanView extends JPanel implements ActionListener {
         contentCenter.add(pnlTable, BorderLayout.CENTER);
     }
 
-    private void initPadding() {
-        for (String[] s : new String[][]{{BorderLayout.NORTH,"10,0"},{BorderLayout.SOUTH,"10,0"},{BorderLayout.EAST,"0,10"},{BorderLayout.WEST,"0,10"}}) {
-            JPanel p = new JPanel(); p.setBackground(BG);
-            int h = Integer.parseInt(s[1].split(",")[0]), w = Integer.parseInt(s[1].split(",")[1]);
-            p.setPreferredSize(new Dimension(w, h)); add(p, s[0]);
-        }
-    }
-
+    // Hàm load dữ liệu và "dịch thuật" mã nhóm quyền sang tên chức vụ
     public void loadDataTable(ArrayList<TaiKhoan> result) {
         tblModel.setRowCount(0);
         for (TaiKhoan tk : result) {
+            String roleName = "Khác";
+            if (tk.getManhomquyen() == 1) roleName = "Quản lý kho";
+            else if (tk.getManhomquyen() == 2) roleName = "NV Nhập hàng";
+            else if (tk.getManhomquyen() == 3) roleName = "NV Xuất hàng";
+
             tblModel.addRow(new Object[]{
                 tk.getUsername(), 
                 tk.getManv(), 
-                tk.getManhomquyen() == 1 ? "Quản lý" : "Nhân viên", 
+                roleName, 
                 tk.getTrangthai() == 1 ? "Hoạt động" : "Bị khóa"
             });
         }
     }
 
+    // Lấy đối tượng tài khoản đang được chọn trên bảng
     public TaiKhoan getTaiKhoanSelected() {
         int index = table.getSelectedRow();
         if (index == -1) return null;
         
         String username = table.getValueAt(index, 0).toString();
+        // Tìm lại đối tượng chuẩn từ danh sách controller
         for (TaiKhoan tk : tkController.getAllList()) {
             if (tk.getUsername().equals(username)) return tk;
         }
@@ -158,16 +162,18 @@ public class TaiKhoanView extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == btnGrant) {
-            TaiKhoanDialog dialog = new TaiKhoanDialog(this, null, "Cấp Tài Khoản", true);
+            // Mở form cấp mới với chế độ ADD
+            TaiKhoanDialog dialog = new TaiKhoanDialog(this, main, "Cấp Tài Khoản", true, "ADD", null);
             dialog.setVisible(true);
 
-        } else if (e.getSource() == btnChangePass) {
+        } else if (e.getSource() == btnEdit) {
             TaiKhoan tkSelect = getTaiKhoanSelected();
             if (tkSelect != null) {
-                DoiMatKhauDialog dialog = new DoiMatKhauDialog(this, null, "Đổi Mật Khẩu", true, tkSelect);
+                // Mở form sửa với chế độ EDIT và truyền đối tượng đã chọn
+                TaiKhoanDialog dialog = new TaiKhoanDialog(this, main, "Sửa Tài Khoản", true, "EDIT", tkSelect);
                 dialog.setVisible(true);
             } else {
-                JOptionPane.showMessageDialog(this, "Vui lòng chọn tài khoản cần đổi mật khẩu!");
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn tài khoản cần sửa!");
             }
 
         } else if (e.getSource() == btnLock) {
@@ -189,6 +195,14 @@ public class TaiKhoanView extends JPanel implements ActionListener {
             } else {
                 JOptionPane.showMessageDialog(this, "Vui lòng chọn tài khoản cần khóa!");
             }
+        }
+    }
+
+    private void initPadding() {
+        for (String[] s : new String[][]{{BorderLayout.NORTH,"10,0"},{BorderLayout.SOUTH,"10,0"},{BorderLayout.EAST,"0,10"},{BorderLayout.WEST,"0,10"}}) {
+            JPanel p = new JPanel(); p.setBackground(BG);
+            int h = Integer.parseInt(s[1].split(",")[0]), w = Integer.parseInt(s[1].split(",")[1]);
+            p.setPreferredSize(new Dimension(w, h)); add(p, s[0]);
         }
     }
 }

@@ -9,11 +9,13 @@ public class SanPham {
     private String mauSac;
     private String dungLuong;
     private String ram;
+    private String hinhAnh; // THÊM BIẾN NÀY
 
     public SanPham() {
     }
 
-    public SanPham(String maSP, String tenSP, String thuongHieu, double donGia, int soLuongTon, String mauSac, String dungLuong, String ram) {
+    // CẬP NHẬT CONSTRUCTOR
+    public SanPham(String maSP, String tenSP, String thuongHieu, double donGia, int soLuongTon, String mauSac, String dungLuong, String ram, String hinhAnh) {
         this.maSP = maSP;
         this.tenSP = tenSP;
         this.thuongHieu = thuongHieu;
@@ -22,69 +24,34 @@ public class SanPham {
         this.mauSac = mauSac;
         this.dungLuong = dungLuong;
         this.ram = ram;
+        this.hinhAnh = hinhAnh;
     }
 
-    public String getMaSP() {
-        return maSP;
-    }
+    public String getMaSP() { return maSP; }
+    public void setMaSP(String maSP) { this.maSP = maSP; }
 
-    public void setMaSP(String maSP) {
-        this.maSP = maSP;
-    }
+    public String getTenSP() { return tenSP; }
+    public void setTenSP(String tenSP) { this.tenSP = tenSP; }
 
-    public String getTenSP() {
-        return tenSP;
-    }
+    public String getThuongHieu() { return thuongHieu; }
+    public void setThuongHieu(String thuongHieu) { this.thuongHieu = thuongHieu; }
 
-    public void setTenSP(String tenSP) {
-        this.tenSP = tenSP;
-    }
+    public double getDonGia() { return donGia; }
+    public void setDonGia(double donGia) { this.donGia = donGia; }
 
-    public String getThuongHieu() {
-        return thuongHieu;
-    }
+    public int getSoLuongTon() { return soLuongTon; }
+    public void setSoLuongTon(int soLuongTon) { this.soLuongTon = soLuongTon; }
 
-    public void setThuongHieu(String thuongHieu) {
-        this.thuongHieu = thuongHieu;
-    }
+    public String getMauSac() { return mauSac; }
+    public void setMauSac(String mauSac) { this.mauSac = mauSac; }
 
-    public double getDonGia() {
-        return donGia;
-    }
+    public String getDungLuong() { return dungLuong; }
+    public void setDungLuong(String dungLuong) { this.dungLuong = dungLuong; }
 
-    public void setDonGia(double donGia) {
-        this.donGia = donGia;
-    }
+    public String getRam() { return ram; }
+    public void setRam(String ram) { this.ram = ram; }
 
-    public int getSoLuongTon() {
-        return soLuongTon;
-    }
-
-    public void setSoLuongTon(int soLuongTon) {
-        this.soLuongTon = soLuongTon;
-    }
-
-    public String getMauSac() {
-        return mauSac;
-    }
-
-    public void setMauSac(String mauSac) {
-        this.mauSac = mauSac;
-    }
-
-    public String getDungLuong() {
-        return dungLuong;
-    }
-
-    public void setDungLuong(String dungLuong) {
-        this.dungLuong = dungLuong;
-    }
-
-    public String getRam() {
-        return ram;
-    }
-
-    public void setRam(String ram) {
-        this.ram = ram;
-    }
+   
+    public String getHinhAnh() { return hinhAnh; }
+    public void setHinhAnh(String hinhAnh) { this.hinhAnh = hinhAnh; }
 }

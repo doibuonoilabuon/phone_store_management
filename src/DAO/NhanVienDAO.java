@@ -19,12 +19,11 @@ public class NhanVienDAO implements DAOinterface<NhanVien> {
         int result = 0;
         try {
             Connection con = DbConection.getConnection();
-            // Không insert manv vì nó tự tăng, mặc định trangthai = 1 (Đang làm)
             String sql = "INSERT INTO NhanVien (hoten, gioitinh, chucvu, sdt, email, trangthai) VALUES (?, ?, ?, ?, ?, 1)";
             PreparedStatement pst = con.prepareStatement(sql);
-            pst.setString(1, t.getHoten());
+            pst.setNString(1, t.getHoten()); // Dùng setNString để lưu tiếng Việt chuẩn
             pst.setInt(2, t.getGioitinh());
-            pst.setString(3, t.getChucvu());
+            pst.setNString(3, t.getChucvu());
             pst.setString(4, t.getSdt());
             pst.setString(5, t.getEmail());
             result = pst.executeUpdate();
@@ -42,9 +41,9 @@ public class NhanVienDAO implements DAOinterface<NhanVien> {
             Connection con = DbConection.getConnection();
             String sql = "UPDATE NhanVien SET hoten=?, gioitinh=?, chucvu=?, sdt=?, email=? WHERE manv=?";
             PreparedStatement pst = con.prepareStatement(sql);
-            pst.setString(1, t.getHoten());
+            pst.setNString(1, t.getHoten());
             pst.setInt(2, t.getGioitinh());
-            pst.setString(3, t.getChucvu());
+            pst.setNString(3, t.getChucvu());
             pst.setString(4, t.getSdt());
             pst.setString(5, t.getEmail());
             pst.setInt(6, t.getManv());
@@ -61,7 +60,6 @@ public class NhanVienDAO implements DAOinterface<NhanVien> {
         int result = 0;
         try {
             Connection con = DbConection.getConnection();
-            // Xóa mềm: Update trạng thái về 0 (Nghỉ việc)
             String sql = "UPDATE NhanVien SET trangthai=0 WHERE manv=?";
             PreparedStatement pst = con.prepareStatement(sql);
             pst.setInt(1, Integer.parseInt(manv));
@@ -78,15 +76,15 @@ public class NhanVienDAO implements DAOinterface<NhanVien> {
         ArrayList<NhanVien> list = new ArrayList<>();
         try {
             Connection con = DbConection.getConnection();
-            String sql = "SELECT * FROM NhanVien WHERE trangthai=1"; // Chỉ lấy người đang làm việc
+            String sql = "SELECT * FROM NhanVien WHERE trangthai=1";
             PreparedStatement pst = con.prepareStatement(sql);
             ResultSet rs = pst.executeQuery();
             while (rs.next()) {
                 NhanVien nv = new NhanVien(
                         rs.getInt("manv"),
-                        rs.getString("hoten"),
+                        rs.getNString("hoten"), // Dùng getNString để lấy tiếng Việt chuẩn
                         rs.getInt("gioitinh"),
-                        rs.getString("chucvu"),
+                        rs.getNString("chucvu"),
                         rs.getString("sdt"),
                         rs.getInt("trangthai"),
                         rs.getString("email")
@@ -100,12 +98,49 @@ public class NhanVienDAO implements DAOinterface<NhanVien> {
         return list;
     }
 
+    // ĐÃ FIX: Triển khai hàm tìm kiếm theo ID
     @Override
     public NhanVien selectById(String manv) {
-        // Có thể tự triển khai tương tự selectAll nếu cần
-        return null;
+        NhanVien result = null;
+        try {
+            Connection con = DbConection.getConnection();
+            String sql = "SELECT * FROM NhanVien WHERE manv = ?";
+            PreparedStatement pst = con.prepareStatement(sql);
+            pst.setInt(1, Integer.parseInt(manv));
+            ResultSet rs = pst.executeQuery();
+            if (rs.next()) {
+                result = new NhanVien(
+                        rs.getInt("manv"),
+                        rs.getNString("hoten"),
+                        rs.getInt("gioitinh"),
+                        rs.getNString("chucvu"),
+                        rs.getString("sdt"),
+                        rs.getInt("trangthai"),
+                        rs.getString("email")
+                );
+            }
+            DbConection.closeConnection(con);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
-
+public boolean checkEmail(String email) {
+    try {
+        Connection con = DbConection.getConnection();
+        String sql = "SELECT * FROM NhanVien WHERE email = ?";
+        PreparedStatement pst = con.prepareStatement(sql);
+        pst.setString(1, email);
+        ResultSet rs = pst.executeQuery();
+        if (rs.next()) {
+            return true; 
+        }
+        DbConection.closeConnection(con);
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return false; // Không tìm thấy
+}
     @Override
     public int getAutoIncrement() {
         return -1;

@@ -12,13 +12,18 @@ public class TaiKhoanDialog extends JDialog {
     private JButton btnLuu, btnHuy;
     private TaiKhoanController controller;
     private TaiKhoanView parentView;
+    private String mode;
+    private TaiKhoan currentTK;
 
-    public TaiKhoanDialog(TaiKhoanView parentView, Frame owner, String title, boolean modal) {
+    public TaiKhoanDialog(TaiKhoanView parentView, Frame owner, String title, boolean modal, String mode, TaiKhoan tk) {
         super(owner, title, modal);
         this.parentView = parentView;
         this.controller = new TaiKhoanController();
+        this.mode = mode;
+        this.currentTK = tk;
         
         initComponents();
+        setupMode();
     }
 
     private void initComponents() {
@@ -43,7 +48,12 @@ public class TaiKhoanDialog extends JDialog {
         pnlCenter.add(txtPassword);
 
         pnlCenter.add(new JLabel("Nhóm Quyền:"));
-        cbxNhomQuyen = new JComboBox<>(new String[]{"Quản lý", "Nhân viên"}); // 1: Quản lý, 2: Nhân viên
+        // KHỞI TẠO COMBOBOX ĐÚNG CÁCH (Tránh lỗi NullPointerException)
+        cbxNhomQuyen = new JComboBox<>(new String[]{
+            "Quản lý kho", 
+            "Nhân viên nhập hàng", 
+            "Nhân viên xuất hàng"
+        });
         pnlCenter.add(cbxNhomQuyen);
 
         add(pnlCenter, BorderLayout.CENTER);
@@ -65,20 +75,49 @@ public class TaiKhoanDialog extends JDialog {
 
             try {
                 int maNV = Integer.parseInt(txtMaNV.getText());
-                int nhomQuyen = cbxNhomQuyen.getSelectedIndex() == 0 ? 1 : 2;
-
-                TaiKhoan newTK = new TaiKhoan(maNV, txtUsername.getText(), txtPassword.getText(), nhomQuyen, 1);
                 
-                if (controller.addTaiKhoan(newTK)) {
-                    JOptionPane.showMessageDialog(this, "Cấp tài khoản thành công!");
-                    parentView.loadDataTable(controller.getAllList());
-                    dispose();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Cấp thất bại! Tên đăng nhập đã tồn tại hoặc Mã NV không hợp lệ.");
+                // CÔNG THỨC DỊCH THUẬT: Vị trí 0 -> 1, Vị trí 1 -> 2, Vị trí 2 -> 3
+                int nhomQuyen = cbxNhomQuyen.getSelectedIndex() + 1;
+
+                if (mode.equals("ADD")) {
+                    TaiKhoan newTK = new TaiKhoan(maNV, txtUsername.getText(), txtPassword.getText(), nhomQuyen, 1);
+                    if (controller.addTaiKhoan(newTK)) {
+                        JOptionPane.showMessageDialog(this, "Cấp tài khoản thành công!");
+                        parentView.loadDataTable(controller.getAllList());
+                        dispose();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Cấp thất bại! Tên đăng nhập đã tồn tại hoặc Mã NV không hợp lệ.");
+                    }
+                } else if (mode.equals("EDIT")) {
+                    // Cập nhật lại mật khẩu và nhóm quyền
+                    TaiKhoan editTK = new TaiKhoan(maNV, txtUsername.getText(), txtPassword.getText(), nhomQuyen, currentTK.getTrangthai());
+                    // Lưu ý: Hãy đảm bảo trong TaiKhoanController có hàm updateTaiKhoan gọi DAO nhé
+                    if (DAO.TaiKhoanDAO.getInstance().update(editTK) > 0) {
+                        JOptionPane.showMessageDialog(this, "Sửa tài khoản thành công!");
+                        parentView.loadDataTable(controller.getAllList());
+                        dispose();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Sửa thất bại!");
+                    }
                 }
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Mã NV phải là số nguyên!");
             }
         });
+    }
+
+    private void setupMode() {
+        if (mode.equals("EDIT") && currentTK != null) {
+            txtMaNV.setText(String.valueOf(currentTK.getManv()));
+            txtMaNV.setEditable(false); // Khóa không cho đổi Mã NV
+            
+            txtUsername.setText(currentTK.getUsername());
+            txtUsername.setEditable(false); // Khóa không cho đổi Tên đăng nhập
+            
+            txtPassword.setText(currentTK.getMatkhau());
+            
+            // MAP NGƯỢC TỪ DB LÊN GIAO DIỆN: Quyền 1 -> Vị trí 0; Quyền 2 -> Vị trí 1
+            cbxNhomQuyen.setSelectedIndex(currentTK.getManhomquyen() - 1);
+        }
     }
 }

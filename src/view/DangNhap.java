@@ -103,14 +103,12 @@ public class DangNhap extends JFrame implements KeyListener {
         });
         pnlLogIn.add(lbl6);
 
-        // Chức năng quên mật khẩu (Tạm thời giữ nguyên form QuenMatKhau của bạn)
         lbl7 = new JLabel("Quên mật khẩu", JLabel.RIGHT);
         lbl7.setPreferredSize(new Dimension(380, 50));
         lbl7.setFont(new Font(FlatRobotoFont.FAMILY, Font.ITALIC, 18));
         lbl7.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent evt) {
-                // Đảm bảo bạn đã có class QuenMatKhau, nếu không code sẽ báo lỗi đoạn này
                 QuenMatKhau qmk = new QuenMatKhau(jf, true);
                 qmk.setVisible(true);
             }
@@ -122,21 +120,17 @@ public class DangNhap extends JFrame implements KeyListener {
         this.add(pnlMain, BorderLayout.EAST);
     }
 
-    // ========== ĐÃ CẬP NHẬT LOGIC ĐĂNG NHẬP TẠI ĐÂY ==========
     public void checkLogin() throws UnsupportedLookAndFeelException {
         String usernameCheck = txtUsername.getText();
         String passwordCheck = txtPassword.getPass();
         
-        // 1. Kiểm tra rỗng
         if (usernameCheck.isEmpty() || passwordCheck.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập thông tin đầy đủ!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
             return;
         } 
         
-        // 2. Chọc xuống DB lấy thông tin tài khoản
         TaiKhoan tk = TaiKhoanDAO.getInstance().selectById(usernameCheck);
         
-        // 3. Xử lý các trường hợp
         if (tk == null) {
             JOptionPane.showMessageDialog(this, "Tên đăng nhập không tồn tại!", "Lỗi Đăng Nhập", JOptionPane.ERROR_MESSAGE);
         } else if (!tk.getMatkhau().equals(passwordCheck)) {
@@ -144,13 +138,8 @@ public class DangNhap extends JFrame implements KeyListener {
         } else if (tk.getTrangthai() == 0) {
             JOptionPane.showMessageDialog(this, "Tài khoản của bạn đã bị khóa! Vui lòng liên hệ Admin.", "Khóa Tài Khoản", JOptionPane.ERROR_MESSAGE);
         } else {
-           
-            
-            // Mở giao diện chính (Main)
-            Main mainApp = new Main(); // <-- Đảm bảo class Main của bạn có constructor này
+            Main mainApp = new Main(tk); 
             mainApp.setVisible(true);
-            
-            // Tắt form đăng nhập hiện tại
             this.dispose(); 
         }
     }

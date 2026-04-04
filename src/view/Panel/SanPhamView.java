@@ -67,10 +67,9 @@ public class SanPhamView extends JPanel implements ActionListener {
         btnEdit   = new ButtonToolBar("SỬA",         "edit.svg",        "update");
         btnDelete = new ButtonToolBar("XÓA",         "delete.svg",      "delete");
         btnDetail = new ButtonToolBar("CHI TIẾT",    "detail.svg",      "view");
-        btnXemDS  = new ButtonToolBar("XEM DS",      "phone.svg",       "view");
-        btnExport = new ButtonToolBar("XUẤT EXCEL",  "export_excel.svg","view");
+      
 
-        for (ButtonToolBar btn : new ButtonToolBar[]{btnAdd, btnEdit, btnDelete, btnDetail, btnXemDS, btnExport}) {
+        for (ButtonToolBar btn : new ButtonToolBar[]{btnAdd, btnEdit, btnDelete, btnDetail}) {
             btn.addActionListener(this);
             toolbar.add(btn);
         }
@@ -130,7 +129,7 @@ public class SanPhamView extends JPanel implements ActionListener {
         DefaultTableCellRenderer center = new DefaultTableCellRenderer();
         center.setHorizontalAlignment(JLabel.CENTER);
         for (int i = 0; i < table.getColumnCount(); i++) {
-            if (i != 1) table.getColumnModel().getColumn(i).setCellRenderer(center);
+             table.getColumnModel().getColumn(i).setCellRenderer(center);
         }
 
         JScrollPane scroll = new JScrollPane(table);

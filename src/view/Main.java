@@ -1,6 +1,5 @@
 package view;
 
-
 import java.awt.*;
 import javax.swing.*;
 import model.TaiKhoan;
@@ -94,8 +93,13 @@ public class Main extends JFrame {
         MainContent.repaint();
         MainContent.validate();
     }
+
+ 
+    public TaiKhoan getCurrentUser() {
+        return this.user;
+    }
+
     public static void main(String[] args) {
-        
         setupFlatLaf();
         SwingUtilities.invokeLater(() -> {
             Main frame = new Main();

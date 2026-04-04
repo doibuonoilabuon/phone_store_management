@@ -2,206 +2,243 @@ package view.Panel;
 
 import view.Main;
 import com.formdev.flatlaf.FlatClientProperties;
+import DAO.SanPhamDAO;
+import DAO.PhieuNhapDAO;
+import DAO.NhaCungCapDAO;
+import controller.PhieuNhapController;
+import model.ChiTietPhieuNhap;
+import model.PhieuNhap;
+import model.SanPham;
+import model.NhaCungCap;
+
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
+import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 public class TaoPhieuNhapView extends JPanel implements ActionListener {
 
     Main main;
+    PhieuNhapController controller;
     Color BG = new Color(240, 247, 250);
 
-    // Bảng dữ liệu
-    JTable tableSanPham, tableChiTiet;
     DefaultTableModel tblModelSP, tblModelChiTiet;
+    JTable tableSP, tableChiTiet;
 
-    // Các trường nhập liệu bên Trái (Sản phẩm)
-    JTextField txtTimKiem, txtMaSp, txtTenSp, txtDonGia, txtSoLuong, txtImei;
-    JComboBox<String> cbxCauHinh, cbxPhuongThuc;
-    JButton btnAddSp, btnEditSp, btnDeleteSp, btnImportExcel, btnScanImei;
+    JTextField txtTimKiem, txtMaSP, txtTenSP, txtGiaNhap, txtSoLuong;
+    // Bỏ txtImeiBatDau và cbxPhuongThuc
+    JButton btnAddSP, btnImportExcel, btnEditSP, btnDeleteSP;
 
-    // Các trường nhập liệu bên Phải (Phiếu Nhập)
     JTextField txtMaPhieu, txtNhanVien;
     JComboBox<String> cbxNhaCungCap;
-    JLabel lblTongTien;
-    JButton btnXacNhanNhap;
+    JLabel lblTongTienValue;
+    JButton btnXacNhan;
 
     public TaoPhieuNhapView(Main main) {
         this.main = main;
-        setLayout(new BorderLayout(10, 10));
+        this.controller = new PhieuNhapController(this);
+        setLayout(new BorderLayout(15, 15));
         setBackground(BG);
-        setBorder(new EmptyBorder(10, 10, 10, 10));
+        setBorder(new EmptyBorder(15, 15, 15, 15));
+        
         initComponent();
+        loadDataToTableSP();
+        loadDataNhaCungCap();
     }
 
     private void initComponent() {
-        // ==================== BÊN TRÁI: KHU VỰC CHỌN SẢN PHẨM ====================
-        JPanel pnlLeft = new JPanel(new BorderLayout(0, 10));
+        // --- PANEL TRÁI: CHỌN SẢN PHẨM & GIỎ HÀNG ---
+        JPanel pnlLeft = new JPanel(new BorderLayout(0, 15));
         pnlLeft.setOpaque(false);
 
-        // 1. Top Left: Bảng danh sách sản phẩm mẫu
-        JPanel pnlTopLeft = new JPanel(new BorderLayout(0, 5));
-        pnlTopLeft.setBackground(Color.WHITE);
-        pnlTopLeft.putClientProperty(FlatClientProperties.STYLE, "arc: 12");
-        pnlTopLeft.setBorder(new EmptyBorder(10, 10, 10, 10));
-        pnlTopLeft.setPreferredSize(new Dimension(0, 250));
+        // Khối trên: Chọn SP và Nhập số lượng
+        JPanel pnlLeftTop = new JPanel(new BorderLayout(20, 0));
+        pnlLeftTop.setBackground(Color.WHITE);
+        pnlLeftTop.putClientProperty(FlatClientProperties.STYLE, "arc: 12");
+        pnlLeftTop.setBorder(new EmptyBorder(15, 15, 15, 15));
+        pnlLeftTop.setPreferredSize(new Dimension(0, 250));
+
+        // 1. Bảng chọn sản phẩm nhanh
+        JPanel pnlSearchAndTable = new JPanel(new BorderLayout(0, 10));
+        pnlSearchAndTable.setOpaque(false);
+        pnlSearchAndTable.setPreferredSize(new Dimension(400, 0));
 
         txtTimKiem = new JTextField();
-        txtTimKiem.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Tìm kiếm mã, tên sản phẩm...");
-        pnlTopLeft.add(txtTimKiem, BorderLayout.NORTH);
+        txtTimKiem.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Tìm kiếm sản phẩm...");
+        pnlSearchAndTable.add(txtTimKiem, BorderLayout.NORTH);
 
-        tblModelSP = new DefaultTableModel(new String[]{"Mã SP", "Tên Sản Phẩm", "Số Lượng Tồn"}, 0);
-        tableSanPham = new JTable(tblModelSP);
-        pnlTopLeft.add(new JScrollPane(tableSanPham), BorderLayout.CENTER);
-        pnlLeft.add(pnlTopLeft, BorderLayout.NORTH);
+        tblModelSP = new DefaultTableModel(new String[]{"Mã SP", "Tên sản phẩm", "Tồn kho"}, 0);
+        tableSP = new JTable(tblModelSP);
+        tableSP.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int row = tableSP.getSelectedRow();
+                if (row != -1) {
+                    txtMaSP.setText(tableSP.getValueAt(row, 0).toString());
+                    txtTenSP.setText(tableSP.getValueAt(row, 1).toString());
+                }
+            }
+        });
+        pnlSearchAndTable.add(new JScrollPane(tableSP), BorderLayout.CENTER);
+        pnlLeftTop.add(pnlSearchAndTable, BorderLayout.WEST);
 
-        // 2. Center Left: Form cấu hình sản phẩm chuẩn bị nhập
-        JPanel pnlMidLeft = new JPanel(new BorderLayout(10, 10));
-        pnlMidLeft.setBackground(Color.WHITE);
-        pnlMidLeft.putClientProperty(FlatClientProperties.STYLE, "arc: 12");
-        pnlMidLeft.setBorder(new EmptyBorder(10, 10, 10, 10));
+        // 2. Form nhập liệu (Đã bỏ IMEI)
+        JPanel pnlForm = new JPanel(new GridLayout(3, 1, 0, 10));
+        pnlForm.setOpaque(false);
 
-        JPanel pnlForm = new JPanel(new GridLayout(2, 4, 10, 10));
-        pnlForm.setBackground(Color.WHITE);
+        txtMaSP = new JTextField(); txtMaSP.setEditable(false);
+        txtTenSP = new JTextField(); txtTenSP.setEditable(false);
+        txtGiaNhap = new JTextField();
+        txtSoLuong = new JTextField();
+
+        pnlForm.add(createField("Sản phẩm đang chọn", txtTenSP));
         
-        pnlForm.add(createInputPanel("Mã SP", txtMaSp = new JTextField()));
-        txtMaSp.setEditable(false);
-        pnlForm.add(createInputPanel("Tên Sản Phẩm", txtTenSp = new JTextField()));
-        txtTenSp.setEditable(false);
-        pnlForm.add(createComboPanel("Cấu hình", cbxCauHinh = new JComboBox<>(new String[]{"Chọn sản phẩm trước"})));
-        pnlForm.add(createInputPanel("Giá Nhập", txtDonGia = new JTextField()));
+        JPanel row2 = new JPanel(new GridLayout(1, 2, 15, 0)); row2.setOpaque(false);
+        row2.add(createField("Giá nhập (VNĐ)", txtGiaNhap));
+        row2.add(createField("Số lượng nhập", txtSoLuong));
+        pnlForm.add(row2);
 
-        pnlForm.add(createComboPanel("Phương thức", cbxPhuongThuc = new JComboBox<>(new String[]{"Nhập lô", "Nhập lẻ"})));
-        pnlForm.add(createInputPanel("Số Lượng", txtSoLuong = new JTextField()));
-        pnlForm.add(createInputPanel("Mã IMEI (Lô/Đầu)", txtImei = new JTextField()));
-        
-        JPanel pnlImeiActions = new JPanel(new GridLayout(1, 2, 5, 0));
-        pnlImeiActions.setBackground(Color.WHITE);
-        btnScanImei = new JButton("Quét IMEI");
-        btnImportExcel = new JButton("Excel IMEI");
-        pnlImeiActions.add(btnScanImei);
-        pnlImeiActions.add(btnImportExcel);
-        pnlForm.add(createPanel("Hành động IMEI", pnlImeiActions));
+        // Panel nút bấm
+        JPanel pnlBtns = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 10));
+        pnlBtns.setOpaque(false);
+        btnAddSP = new JButton("Thêm vào giỏ"); btnAddSP.addActionListener(this);
+        btnEditSP = new JButton("Sửa dòng");
+        btnDeleteSP = new JButton("Xoá dòng"); btnDeleteSP.addActionListener(this);
+        pnlBtns.add(btnAddSP); pnlBtns.add(Box.createHorizontalStrut(10));
+        pnlBtns.add(btnEditSP); pnlBtns.add(Box.createHorizontalStrut(10));
+        pnlBtns.add(btnDeleteSP);
+        pnlForm.add(pnlBtns);
 
-        pnlMidLeft.add(pnlForm, BorderLayout.CENTER);
+        pnlLeftTop.add(pnlForm, BorderLayout.CENTER);
+        pnlLeft.add(pnlLeftTop, BorderLayout.NORTH);
 
-        // Nút thêm/sửa/xóa sản phẩm vào phiếu
-        JPanel pnlActions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        pnlActions.setBackground(Color.WHITE);
-        btnAddSp = new JButton("Thêm vào phiếu");
-        btnAddSp.setBackground(new Color(40, 167, 69)); btnAddSp.setForeground(Color.WHITE);
-        btnEditSp = new JButton("Sửa");
-        btnDeleteSp = new JButton("Xóa");
-        
-        btnAddSp.addActionListener(this);
-        pnlActions.add(btnAddSp); pnlActions.add(btnEditSp); pnlActions.add(btnDeleteSp);
-        pnlMidLeft.add(pnlActions, BorderLayout.SOUTH);
-        
-        pnlLeft.add(pnlMidLeft, BorderLayout.CENTER);
+        // Khối dưới: Bảng Chi tiết phiếu (Giỏ hàng)
+        JPanel pnlLeftBottom = new JPanel(new BorderLayout());
+        pnlLeftBottom.setBackground(Color.WHITE);
+        pnlLeftBottom.putClientProperty(FlatClientProperties.STYLE, "arc: 12");
+        pnlLeftBottom.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        // 3. Bottom Left: Bảng danh sách sản phẩm ĐÃ ĐƯỢC CHỌN VÀO PHIẾU
-        JPanel pnlBotLeft = new JPanel(new BorderLayout());
-        pnlBotLeft.setBackground(Color.WHITE);
-        pnlBotLeft.putClientProperty(FlatClientProperties.STYLE, "arc: 12");
-        pnlBotLeft.setBorder(BorderFactory.createTitledBorder("Danh sách sản phẩm trong phiếu nhập"));
-        pnlBotLeft.setPreferredSize(new Dimension(0, 200));
-
-        tblModelChiTiet = new DefaultTableModel(new String[]{"STT", "Mã SP", "Tên SP", "Cấu hình", "Đơn Giá", "Số Lượng"}, 0);
+        tblModelChiTiet = new DefaultTableModel(new String[]{"STT", "Mã SP", "Tên sản phẩm", "Đơn giá", "Số lượng", "Thành tiền"}, 0);
         tableChiTiet = new JTable(tblModelChiTiet);
-        pnlBotLeft.add(new JScrollPane(tableChiTiet), BorderLayout.CENTER);
-        pnlLeft.add(pnlBotLeft, BorderLayout.SOUTH);
+        pnlLeftBottom.add(new JScrollPane(tableChiTiet), BorderLayout.CENTER);
+        pnlLeft.add(pnlLeftBottom, BorderLayout.CENTER);
 
         add(pnlLeft, BorderLayout.CENTER);
 
-        // ==================== BÊN PHẢI: KHU VỰC THÔNG TIN PHIẾU ====================
-        JPanel pnlRight = new JPanel(new BorderLayout(0, 10));
-        pnlRight.setPreferredSize(new Dimension(300, 0));
-        pnlRight.setOpaque(false);
+        // --- PANEL PHẢI: THÔNG TIN CHUNG ---
+        JPanel pnlRight = new JPanel(new BorderLayout());
+        pnlRight.setBackground(Color.WHITE);
+        pnlRight.putClientProperty(FlatClientProperties.STYLE, "arc: 12");
+        pnlRight.setBorder(new EmptyBorder(15, 15, 15, 15));
+        pnlRight.setPreferredSize(new Dimension(320, 0));
 
-        JPanel pnlInfo = new JPanel(new GridLayout(4, 1, 0, 15));
-        pnlInfo.setBackground(Color.WHITE);
-        pnlInfo.putClientProperty(FlatClientProperties.STYLE, "arc: 12");
-        pnlInfo.setBorder(new EmptyBorder(20, 15, 20, 15));
-
-        pnlInfo.add(createInputPanel("Mã Phiếu Nhập", txtMaPhieu = new JTextField("Tự động tạo")));
+        JPanel pnlTicket = new JPanel(new GridLayout(3, 1, 0, 20));
+        pnlTicket.setOpaque(false);
+        txtMaPhieu = new JTextField("PN" + PhieuNhapDAO.getInstance().getAutoIncrement());
         txtMaPhieu.setEditable(false);
-        pnlInfo.add(createInputPanel("Nhân Viên Lập", txtNhanVien = new JTextField("Tên nhân viên đang đăng nhập")));
-        txtNhanVien.setEditable(false);
-        pnlInfo.add(createComboPanel("Nhà Cung Cấp", cbxNhaCungCap = new JComboBox<>(new String[]{"Chọn nhà cung cấp"})));
+        
+        String user = (main.getCurrentUser() != null) ? main.getCurrentUser().getUsername() : "Admin";
+        txtNhanVien = new JTextField(user); txtNhanVien.setEditable(false);
+        cbxNhaCungCap = new JComboBox<>();
 
-        pnlRight.add(pnlInfo, BorderLayout.NORTH);
+        pnlTicket.add(createField("Mã phiếu nhập", txtMaPhieu));
+        pnlTicket.add(createField("Nhân viên thực hiện", txtNhanVien));
+        pnlTicket.add(createField("Nhà cung cấp", cbxNhaCungCap));
+        pnlRight.add(pnlTicket, BorderLayout.NORTH);
 
-        // Tổng tiền và Nút xác nhận
-        JPanel pnlThanhToan = new JPanel(new BorderLayout(0, 15));
-        pnlThanhToan.setBackground(Color.WHITE);
-        pnlThanhToan.putClientProperty(FlatClientProperties.STYLE, "arc: 12");
-        pnlThanhToan.setBorder(new EmptyBorder(20, 15, 20, 15));
-
-        JPanel pnlTongTien = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        pnlTongTien.setBackground(Color.WHITE);
-        JLabel lblTitle = new JLabel("TỔNG TIỀN: ");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        lblTongTien = new JLabel("0 đ");
-        lblTongTien.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        lblTongTien.setForeground(new Color(220, 53, 69)); // Màu đỏ
-        pnlTongTien.add(lblTitle); pnlTongTien.add(lblTongTien);
-
-        btnXacNhanNhap = new JButton("XÁC NHẬN NHẬP HÀNG");
-        btnXacNhanNhap.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        btnXacNhanNhap.setBackground(new Color(13, 110, 253));
-        btnXacNhanNhap.setForeground(Color.WHITE);
-        btnXacNhanNhap.setPreferredSize(new Dimension(0, 50));
-        btnXacNhanNhap.addActionListener(this);
-
-        pnlThanhToan.add(pnlTongTien, BorderLayout.CENTER);
-        pnlThanhToan.add(btnXacNhanNhap, BorderLayout.SOUTH);
-
-        pnlRight.add(pnlThanhToan, BorderLayout.SOUTH);
+        JPanel pnlTotalArea = new JPanel(new BorderLayout(0, 15));
+        pnlTotalArea.setOpaque(false);
+        lblTongTienValue = new JLabel("0đ", JLabel.RIGHT);
+        lblTongTienValue.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblTongTienValue.setForeground(new Color(231, 76, 60));
+        
+        btnXacNhan = new JButton("Xác nhận nhập hàng");
+        btnXacNhan.setPreferredSize(new Dimension(0, 45));
+        btnXacNhan.setBackground(new Color(46, 204, 113)); btnXacNhan.setForeground(Color.WHITE);
+        btnXacNhan.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnXacNhan.addActionListener(this);
+        
+        pnlTotalArea.add(lblTongTienValue, BorderLayout.NORTH);
+        pnlTotalArea.add(btnXacNhan, BorderLayout.SOUTH);
+        pnlRight.add(pnlTotalArea, BorderLayout.SOUTH);
 
         add(pnlRight, BorderLayout.EAST);
-
-        // Căn giữa các bảng
-        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
-        center.setHorizontalAlignment(JLabel.CENTER);
-        for(int i=0; i<tableSanPham.getColumnCount(); i++) tableSanPham.getColumnModel().getColumn(i).setCellRenderer(center);
-        for(int i=0; i<tableChiTiet.getColumnCount(); i++) tableChiTiet.getColumnModel().getColumn(i).setCellRenderer(center);
     }
 
-    // Các hàm hỗ trợ vẽ UI cho gọn code
-    private JPanel createInputPanel(String title, Component comp) {
-        JPanel pnl = new JPanel(new BorderLayout(0, 5));
-        pnl.setBackground(Color.WHITE);
-        pnl.add(new JLabel(title), BorderLayout.NORTH);
-        pnl.add(comp, BorderLayout.CENTER);
-        return pnl;
+    private JPanel createField(String title, Component comp) {
+        JPanel p = new JPanel(new BorderLayout(0, 5)); p.setOpaque(false);
+        p.add(new JLabel(title), BorderLayout.NORTH);
+        p.add(comp, BorderLayout.CENTER);
+        return p;
     }
 
-    private JPanel createComboPanel(String title, JComboBox cbx) {
-        JPanel pnl = new JPanel(new BorderLayout(0, 5));
-        pnl.setBackground(Color.WHITE);
-        pnl.add(new JLabel(title), BorderLayout.NORTH);
-        pnl.add(cbx, BorderLayout.CENTER);
-        return pnl;
+    public void loadDataToTableSP() {
+        ArrayList<SanPham> list = SanPhamDAO.getInstance().selectAll();
+        tblModelSP.setRowCount(0);
+        for (SanPham sp : list) {
+            tblModelSP.addRow(new Object[]{ sp.getMaSP(), sp.getTenSP(), sp.getSoLuongTon() });
+        }
     }
-    
-    private JPanel createPanel(String title, JPanel inner) {
-        JPanel pnl = new JPanel(new BorderLayout(0, 5));
-        pnl.setBackground(Color.WHITE);
-        pnl.add(new JLabel(title), BorderLayout.NORTH);
-        pnl.add(inner, BorderLayout.CENTER);
-        return pnl;
+
+    public void loadDataNhaCungCap() {
+        ArrayList<NhaCungCap> list = NhaCungCapDAO.getInstance().selectAll();
+        cbxNhaCungCap.removeAllItems();
+        for (NhaCungCap ncc : list) cbxNhaCungCap.addItem(ncc.getTenNCC());
+    }
+
+    public void tinhTongTien() {
+        long tong = 0;
+        for (int i = 0; i < tblModelChiTiet.getRowCount(); i++) {
+            tong += (long) tblModelChiTiet.getValueAt(i, 5);
+        }
+        lblTongTienValue.setText(String.format("%,d", tong) + "đ");
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == btnAddSp) {
-            JOptionPane.showMessageDialog(this, "Chức năng nạp sản phẩm vào phiếu chờ xử lý ở Controller!");
-        } else if (e.getSource() == btnXacNhanNhap) {
-            JOptionPane.showMessageDialog(this, "Chức năng lưu Phiếu Nhập xuống CSDL chờ xử lý ở Controller!");
+        if (e.getSource() == btnAddSP) {
+            if (txtMaSP.getText().isEmpty() || txtSoLuong.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn SP và nhập số lượng!");
+                return;
+            }
+            try {
+                int sl = Integer.parseInt(txtSoLuong.getText());
+                long gia = Long.parseLong(txtGiaNhap.getText());
+                long thanhTien = sl * gia;
+                tblModelChiTiet.addRow(new Object[]{
+                    tblModelChiTiet.getRowCount() + 1, txtMaSP.getText(), txtTenSP.getText(), gia, sl, thanhTien
+                });
+                tinhTongTien();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Số lượng/Giá phải là số!");
+            }
+        } else if (e.getSource() == btnXacNhan) {
+            if (tblModelChiTiet.getRowCount() == 0) {
+                JOptionPane.showMessageDialog(this, "Giỏ hàng đang trống!");
+                return;
+            }
+            controller.handleNhapHang();
         }
+    }
+
+    public PhieuNhap getPhieuNhapInfo() {
+        String ncc = cbxNhaCungCap.getSelectedItem().toString();
+        int nv = (main.getCurrentUser() != null) ? main.getCurrentUser().getManv() : 1;
+        long tong = Long.parseLong(lblTongTienValue.getText().replaceAll("[^0-9]", ""));
+        return new PhieuNhap(ncc, PhieuNhapDAO.getInstance().getAutoIncrement(), nv, new java.sql.Timestamp(System.currentTimeMillis()), tong, 1);
+    }
+
+    public ArrayList<ChiTietPhieuNhap> getDsChiTiet() {
+        ArrayList<ChiTietPhieuNhap> ds = new ArrayList<>();
+        int mp = PhieuNhapDAO.getInstance().getAutoIncrement();
+        for (int i = 0; i < tblModelChiTiet.getRowCount(); i++) {
+            String msp = tblModelChiTiet.getValueAt(i, 1).toString();
+            int sl = (int) tblModelChiTiet.getValueAt(i, 4);
+            long gia = (long) tblModelChiTiet.getValueAt(i, 3);
+            ds.add(new ChiTietPhieuNhap(mp, msp, sl, gia));
+        }
+        return ds;
     }
 }

@@ -6,7 +6,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-
+import view.DangNhap;
 import view.Main;
 import view.Panel.KhachHangView;
 import view.Panel.NhanVienView;
@@ -14,28 +14,29 @@ import view.Panel.SanPhamView;
 import view.Panel.TaiKhoanView;
 import view.Panel.TrangChu; 
 import view.Panel.NhaCungCapView;
- import view.Panel.PhieuNhapView; 
+import view.Panel.PhieuNhapView; 
 import view.Panel.PhieuXuatView; 
 import model.TaiKhoan;
 import model.NhanVien;
+import DAO.ChiTietQuyenDAO; 
+import database.DbConection; 
 
 public class MenuTaskbar extends JPanel {
 
     TrangChu trangChu; 
     SanPhamView sanPham;
     PhieuNhapView phieuNhap; 
- PhieuXuatView phieuXuat; 
+    PhieuXuatView phieuXuat; 
     KhachHangView khachHang;
     NhaCungCapView nhacungcap;
     NhanVienView nhanVien;
     TaiKhoanView taiKhoan;
     
-    // Đã thêm Nhập hàng và Xuất hàng vào đây
     String[][] getSt = {
         {"Trang chủ", "home.svg", "trangchu"},
         {"Sản phẩm", "product.svg", "sanpham"},
-        {"Nhập hàng", "import.svg", "nhaphang"},  // <-- MỚI
-        {"Xuất hàng", "export.svg", "xuathang"},  // <-- MỚI
+        {"Nhập hàng", "import.svg", "nhaphang"},  
+        {"Xuất hàng", "export.svg", "xuathang"},  
         {"Khách hàng", "customer.svg", "khachhang"},
         {"Nhà cung cấp", "supplier.svg", "nhacungcap"},
         {"Nhân viên", "staff.svg", "nhanvien"},
@@ -129,9 +130,22 @@ public class MenuTaskbar extends JPanel {
 
         this.add(pnlBottom, BorderLayout.SOUTH);
 
-        // Render Menu Items
+       
+        int roleId = user != null ? user.getManhomquyen() : 0; 
+
         for (int i = 0; i < getSt.length; i++) {
             listitem[i] = new itemTaskbar(getSt[i][1], getSt[i][0]);
+            
+            String maChucNang = getSt[i][2]; 
+            boolean isAllowed = true;
+            
+           
+            if (!maChucNang.equals("trangchu") && !maChucNang.equals("dangxuat")) {
+                isAllowed = checkQuyen(roleId, maChucNang, "view");
+            }
+            
+          
+            listitem[i].setVisible(isAllowed);
             
             if (i + 1 == getSt.length) {
                 pnlBottom.add(listitem[i]);
@@ -155,83 +169,16 @@ public class MenuTaskbar extends JPanel {
             });
         }
 
-        // --- SỰ KIỆN CHUYỂN TRANG ---
+    
+        listitem[0].addMouseListener(new MouseAdapter() { @Override public void mousePressed(MouseEvent evt) { trangChu = new TrangChu(); main.setPanel(trangChu); } });
+        listitem[1].addMouseListener(new MouseAdapter() { @Override public void mousePressed(MouseEvent evt) { sanPham = new SanPhamView(main); main.setPanel(sanPham); } });
+        listitem[2].addMouseListener(new MouseAdapter() { @Override public void mousePressed(MouseEvent evt) { phieuNhap = new PhieuNhapView(main); main.setPanel(phieuNhap); } });
+        listitem[3].addMouseListener(new MouseAdapter() { @Override public void mousePressed(MouseEvent evt) { phieuXuat = new PhieuXuatView(main); main.setPanel(phieuXuat); } });
+        listitem[4].addMouseListener(new MouseAdapter() { @Override public void mousePressed(MouseEvent evt) { khachHang = new KhachHangView(main); main.setPanel(khachHang); } });
+        listitem[5].addMouseListener(new MouseAdapter() { @Override public void mousePressed(MouseEvent evt) { nhacungcap = new NhaCungCapView(main); main.setPanel(nhacungcap); } });
+        listitem[6].addMouseListener(new MouseAdapter() { @Override public void mousePressed(MouseEvent evt) { nhanVien = new NhanVienView(main); main.setPanel(nhanVien); } });
+        listitem[7].addMouseListener(new MouseAdapter() { @Override public void mousePressed(MouseEvent evt) { taiKhoan = new TaiKhoanView(main); main.setPanel(taiKhoan); } });
         
-        // 0. Trang chủ
-        listitem[0].addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent evt) {
-                trangChu = new TrangChu(); 
-                main.setPanel(trangChu);
-            }
-        });
-
-        // 1. Sản phẩm
-        listitem[1].addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent evt) {
-                sanPham = new SanPhamView(main);
-                main.setPanel(sanPham);
-            }
-        });
-
-        // 2. Nhập hàng (MỚI)
-        listitem[2].addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent evt) {
-                 phieuNhap = new PhieuNhapView(main);
-                 main.setPanel(phieuNhap);
-                
-            }
-        });
-
-        // 3. Xuất hàng (MỚI)
-        listitem[3].addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent evt) {
-                 phieuXuat = new PhieuXuatView(main);
-                 main.setPanel(phieuXuat);
-               
-            }
-        });
-
-        // 4. Khách hàng (Đã lùi index do chèn 2 nút trên)
-        listitem[4].addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent evt) {
-                khachHang = new KhachHangView(main);
-                main.setPanel(khachHang);
-            }
-        });
-
-        // 5. Nhà cung cấp
-        listitem[5].addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent evt) {
-                nhacungcap = new NhaCungCapView(main);
-                main.setPanel(nhacungcap);
-            }
-        });
-
-        // 6. Nhân viên
-        listitem[6].addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent evt) {
-                 nhanVien = new NhanVienView(main); 
-                 main.setPanel(nhanVien);
-            }
-        });
-
-        // 7. Tài khoản
-        listitem[7].addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent evt) {
-                 taiKhoan = new TaiKhoanView(main);
-                 main.setPanel(taiKhoan);
-            }
-        });
-
-        // 8. Đăng xuất
         listitem[8].addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent evt) {
@@ -240,10 +187,19 @@ public class MenuTaskbar extends JPanel {
                         JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (input == 0) {
                     main.dispose();
-                    // Bạn có thể gọi new DangNhap().setVisible(true); ở đây để mở lại màn hình đăng nhập
+                    new DangNhap().setVisible(true); 
                 }
             }
         });
+    }
+
+    // ==============================================================
+    // HÀM KIỂM TRA QUYỀN CHUẨN
+    // ==============================================================
+    private boolean checkQuyen(int roleId, String chucNang, String hanhDong) {
+        if (roleId == 1) return true;  // Nhóm 1 (Admin) auto có tất cả quyền
+        if (roleId == 0) return false; // Không đăng nhập (0) thì auto cấm cửa
+        return ChiTietQuyenDAO.getInstance().checkPermission(roleId, chucNang, hanhDong);
     }
 
     public void pnlMenuTaskbarMousePress(MouseEvent evt) {
@@ -260,6 +216,24 @@ public class MenuTaskbar extends JPanel {
         }
     }
     
+   
+    private String getTenNhanVienTuDB(int maNV) {
+        String tenThat = "Admin";
+        try {
+            java.sql.Connection con = DbConection.getConnection();
+            java.sql.PreparedStatement pst = con.prepareStatement("SELECT hoten FROM nhanvien WHERE manv = ?");
+            pst.setInt(1, maNV);
+            java.sql.ResultSet rs = pst.executeQuery();
+            if (rs.next()) {
+                tenThat = rs.getString("hoten");
+            }
+            DbConection.closeConnection(con);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return tenThat;
+    }
+
     public void in4(JPanel info) {
         JPanel pnlIcon = new JPanel(new FlowLayout());
         pnlIcon.setPreferredSize(new Dimension(60, 0));
@@ -277,14 +251,28 @@ public class MenuTaskbar extends JPanel {
 
         JPanel pnlInfo = new JPanel();
         pnlInfo.setOpaque(false);
-        pnlInfo.setLayout(new FlowLayout(0, 10, 5));
+        pnlInfo.setLayout(new GridLayout(2, 1));
         pnlInfo.setBorder(new EmptyBorder(15, 0, 0, 0));
         info.add(pnlInfo, BorderLayout.CENTER);
 
-        // Hiển thị tên user đang đăng nhập (Nếu có truyền tk vào)
-        String tenHienThi = user != null ? user.getUsername() : "Người dùng hệ thống";
+        // THIẾT LẬP THÔNG TIN TÊN VÀ CHỨC VỤ THẬT
+        String tenHienThi = "Khách Hàng";
+      
+
+        if (user != null) {
+           
+            tenHienThi = getTenNhanVienTuDB(user.getManv());
+            
+          
+        }
+
         lblUsername = new JLabel(tenHienThi);
-        lblUsername.putClientProperty("FlatLaf.style", "font: 150% $semibold.font");
+        lblUsername.putClientProperty("FlatLaf.style", "font: 110% $bold.font");
+        
+    
+       
+
         pnlInfo.add(lblUsername);
+       
     }
 }
